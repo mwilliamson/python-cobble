@@ -48,3 +48,18 @@ def equality_is_defined():
     assert not (album == Album(name="The Glass Passenger", year=2005))
     assert not (album == Album(name="The Glass Passenger", year=2008))
     assert not (album == NotAnAlbum(name="Everything in Transit", year=2005))
+
+
+@istest
+def inequality_is_defined():
+    @cobble.data
+    class NotAnAlbum(object):
+        name = cobble.field()
+        year = cobble.field()
+    
+    album = Album(name="Everything in Transit", year=2005)
+    assert not (album != Album(name="Everything in Transit", year=2005))
+    assert (album != Album(name="Everything in Transit", year=2008))
+    assert (album != Album(name="The Glass Passenger", year=2005))
+    assert (album != Album(name="The Glass Passenger", year=2008))
+    assert (album != NotAnAlbum(name="Everything in Transit", year=2005))

@@ -27,6 +27,7 @@ def _magic_methods(cls, fields):
         _make_init(names),
         _make_repr(cls, names),
         _make_eq(cls, names),
+        _make_neq(),
     ]
 
 
@@ -51,6 +52,9 @@ def _make_eq(cls, names):
         cls.__name__,
         " and ".join("self.{0} == other.{0}".format(name) for name in names)
     )
+
+def _make_neq():
+    return "def __ne__(self, other): return not (self == other)"
 
 
 _sort_key_count = itertools.count()
