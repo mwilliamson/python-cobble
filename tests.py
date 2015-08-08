@@ -63,3 +63,28 @@ def inequality_is_defined():
     assert (album != Album(name="The Glass Passenger", year=2005))
     assert (album != Album(name="The Glass Passenger", year=2008))
     assert (album != NotAnAlbum(name="Everything in Transit", year=2005))
+
+
+@istest
+def field_is_not_required_if_default_is_set_to_none():
+    @cobble.data
+    class Song(object):
+        name = cobble.field()
+        album = cobble.field(default=None)
+    
+    song = Song("MFEO")
+    assert_equal(None, song.album)
+
+
+@istest
+def default_cannot_be_value_other_than_none():
+    exception = _assert_raises(TypeError, lambda: cobble.field(default={}))
+    assert_equal("default value must be None", str(exception))
+
+
+def _assert_raises(exception_type, func):
+    try:
+        func()
+        assert False, "expected {0}".format(exception_type.__name__)
+    except exception_type as error:
+        return error

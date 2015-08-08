@@ -10,7 +10,7 @@ def data(cls):
             None,
             map(functools.partial(_read_field, cls), dir(cls))
         ),
-        key=lambda field: field[1]._sort_key
+        key=lambda field: field[1].sort_key
     )
     stash = {}
     context = globals().copy()
@@ -24,19 +24,26 @@ def data(cls):
 def _magic_methods(cls, fields):
     names = [name for name, field in fields]
     return [
-        _make_init(names),
+        _make_init(fields),
         _make_repr(cls, names),
         _make_eq(cls, names),
         _make_neq(),
     ]
 
 
-def _make_init(names):
+def _make_init(fields):
+    def make_arg(name, field):
+        if field.default == _undefined:
+            return name
+        else:
+            return "{0}={1}".format(name, field.default)
+    
+    args_source = ", ".join(make_arg(name, field) for name, field in fields)
     assignments_source = "".join(
         "\n    self.{0} = {0}".format(name)
-        for name in names
+        for name, field in fields
     )
-    return "def __init__(self, {0}):{1}\n".format(", ".join(names), assignments_source)
+    return "def __init__(self, {0}):{1}\n".format(args_source, assignments_source)
 
 
 def _make_repr(cls, names):
@@ -58,15 +65,19 @@ def _make_neq():
 
 
 _sort_key_count = itertools.count()
+_undefined = object()
 
 
-def field():
-    return _Field(next(_sort_key_count))
+def field(default=_undefined):
+    if default not in [_undefined, None]:
+        raise TypeError("default value must be None")
+    return _Field(next(_sort_key_count), default=default)
 
 
 class _Field(object):
-    def __init__(self, sort_key):
-        self._sort_key = sort_key
+    def __init__(self, sort_key, default):
+        self.sort_key = sort_key
+        self.default = default
 
 
 def _read_field(cls, name):
