@@ -4,6 +4,7 @@ import abc
 import inspect
 
 from .six import exec_, iteritems
+from . import six
 from .inflection import underscore
 
 
@@ -115,15 +116,22 @@ def visitor(cls):
         for subclass in _subclasses(cls)
     )
     
+    if six.PY2:
+        py2_metaclass = "__metaclass__ = abc.ABCMeta"
+        py3_metaclass = ""
+    else:
+        py2_metaclass = ""
+        py3_metaclass = ", metaclass=abc.ABCMeta"
+    
     source = """
-class {0}Visitor(object):
-    __metaclass__ = abc.ABCMeta
+class {0}Visitor(object{1}):
+    {2}
 
     def visit(self, value):
         return value._accept(self)
     
-{1}
-""".format(cls.__name__, "\n".join(abstract_methods))
+{3}
+""".format(cls.__name__, py3_metaclass, py2_metaclass, "\n".join(abstract_methods))
     definition = _compile_definitions([source], {abc: abc})
     return next(iter(definition.values()))
 
