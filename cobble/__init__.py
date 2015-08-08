@@ -1,6 +1,8 @@
 import itertools
 import functools
 
+from .six import exec_
+
 
 def data(cls):
     fields = sorted(
@@ -16,8 +18,9 @@ def data(cls):
         for name in names
     )
     init_source = "def __init__(self, {0}):{1}".format(", ".join(names), assignments_source)
-    exec(init_source)
-    cls.__init__ = __init__
+    stash = {}
+    exec_(init_source, globals(), stash)
+    cls.__init__ = stash["__init__"]
     
     return cls
 
