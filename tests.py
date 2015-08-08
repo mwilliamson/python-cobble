@@ -14,3 +14,10 @@ def can_instantiate_data_class_with_positional_arguments():
     album = Album("Everything in Transit", 2005)
     assert_equal("Everything in Transit", album.name)
     assert_equal(2005, album.year)
+
+
+@istest
+def can_instantiate_data_class_with_keyword_arguments():
+    album = Album(name="Everything in Transit", year=2005)
+    assert_equal("Everything in Transit", album.name)
+    assert_equal(2005, album.year)
