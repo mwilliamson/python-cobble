@@ -1,7 +1,7 @@
 import itertools
 import functools
 
-from .six import exec_
+from .six import exec_, iteritems
 
 
 def data(cls):
@@ -17,17 +17,16 @@ def data(cls):
         "\n    self.{0} = {0}".format(name)
         for name in names
     )
-    init_source = "def __init__(self, {0}):{1}".format(", ".join(names), assignments_source)
-    repr_source = "def __repr__(self):\n     return '{0}({1})'.format({2})".format(
+    init_source = "def __init__(self, {0}):{1}\n".format(", ".join(names), assignments_source)
+    repr_source = "def __repr__(self):\n     return '{0}({1})'.format({2})\n".format(
         cls.__name__,
         ", ".join("{0}={{{1}}}".format(name, index) for index, name in enumerate(names)),
         ", ".join("repr(self.{0})".format(name) for name in names)
     )
     stash = {}
-    exec_(init_source, globals(), stash)
-    exec_(repr_source, globals(), stash)
-    cls.__init__ = stash["__init__"]
-    cls.__repr__ = stash["__repr__"]
+    exec_(init_source + repr_source, globals(), stash)
+    for key, value in iteritems(stash):
+        setattr(cls, key, value)
     
     return cls
 
