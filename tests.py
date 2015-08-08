@@ -10,6 +10,11 @@ class Album(object):
 
 
 @istest
+def module_of_class_is_module_of_caller():
+    assert_equal("tests", Album.__module__)
+
+
+@istest
 def can_instantiate_data_class_with_positional_arguments():
     album = Album("Everything in Transit", 2005)
     assert_equal("Everything in Transit", album.name)
