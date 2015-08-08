@@ -27,3 +27,9 @@ def can_instantiate_data_class_with_keyword_arguments():
 def repr_includes_class_name_and_field_values():
     album = Album(name="Everything in Transit", year=2005)
     assert_equal("Album(name='Everything in Transit', year=2005)", repr(album))
+
+
+@istest
+def str_is_the_same_as_repr():
+    album = Album(name="Everything in Transit", year=2005)
+    assert_equal(repr(album), str(album))
