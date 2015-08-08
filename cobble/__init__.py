@@ -1,5 +1,7 @@
 import itertools
 import functools
+import abc
+import inspect
 
 from .six import exec_, iteritems
 from .inflection import underscore
@@ -16,6 +18,10 @@ def data(cls):
     definitions = _compile_definitions(_methods(cls, fields), {cls.__name__: cls})
     for key, value in iteritems(definitions):
         setattr(cls, key, value)
+    
+    for superclass in inspect.getmro(cls):
+        if superclass in _visitables:
+            _add_subclass(superclass, cls)
     
     return cls
 
@@ -65,7 +71,7 @@ def _make_neq():
 
 
 def _make_accept(cls):
-    return "def _accept(self, visitor): return visitor.visit_{0}(self)".format(underscore(cls.__name__))
+    return "def _accept(self, visitor): return visitor.{0}(self)".format(_visit_method_name(cls))
 
 
 _sort_key_count = itertools.count()
@@ -91,18 +97,34 @@ def _read_field(cls, name):
     else:
         return None
 
+_visitables = set()
 
 def visitable(cls):
+    _visitables.add(cls)
     return cls
     
 
 def visitor(cls):
+    abstract_method_template = """
+    @abc.abstractmethod
+    def {0}(self, value):
+        pass
+"""
+    abstract_methods = (
+        abstract_method_template.format(_visit_method_name(subclass))
+        for subclass in _subclasses(cls)
+    )
+    
     source = """
 class {0}Visitor(object):
+    __metaclass__ = abc.ABCMeta
+
     def visit(self, value):
         return value._accept(self)
-""".format(cls.__name__)
-    definition = _compile_definitions([source], {})
+    
+{1}
+""".format(cls.__name__, "\n".join(abstract_methods))
+    definition = _compile_definitions([source], {abc: abc})
     return definition.values()[0]
 
 
@@ -112,3 +134,18 @@ def _compile_definitions(definitions, bindings):
     stash = {}
     exec_("\n".join(definitions), definition_globals, stash)
     return stash
+
+def _visit_method_name(cls):
+    return "visit_" + underscore(cls.__name__)
+
+
+_subclass_store = {}
+
+def _subclasses(cls):
+    return _subclass_store.get(cls, [])
+
+def _add_subclass(cls, subclass):
+    if cls not in _subclass_store:
+        _subclass_store[cls] = []
+    
+    _subclass_store[cls].append(subclass)

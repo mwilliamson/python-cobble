@@ -100,11 +100,9 @@ class Add(Expression):
     left = cobble.field()
     right = cobble.field()
 
-ExpressionVisitor = cobble.visitor(Expression)
-
 @istest
 def visitor_abc_can_be_generated_from_visitable_subclass():
-    class Evaluator(ExpressionVisitor):
+    class Evaluator(cobble.visitor(Expression)):
         def visit_literal(self, literal):
             return literal.value
         
@@ -113,10 +111,20 @@ def visitor_abc_can_be_generated_from_visitable_subclass():
 
     assert_equal(6, Evaluator().visit(Add(Literal(2), Literal(4))))
 
+@istest
+def error_if_visitor_is_missing_methods():
+    class Evaluator(cobble.visitor(Expression)):
+        def visit_literal(self, literal):
+            return literal.value
+
+    error = _assert_raises(TypeError, Evaluator)
+    assert_equal("Can't instantiate abstract class Evaluator with abstract methods visit_add", str(error))
+
 
 def _assert_raises(exception_type, func):
     try:
         func()
-        assert False, "expected {0}".format(exception_type.__name__)
     except exception_type as error:
         return error
+        
+    assert False, "expected {0}".format(exception_type.__name__)
