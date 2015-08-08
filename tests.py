@@ -82,6 +82,31 @@ def default_cannot_be_value_other_than_none():
     assert_equal("default value must be None", str(exception))
 
 
+@istest
+def visitor_abc_can_be_generated_from_visitable_subclass():
+    @cobble.visitable
+    class Expression(object):
+        pass
+    
+    @cobble.data
+    class Literal(Expression):
+        value = cobble.field()
+    
+    @cobble.data
+    class Add(Expression):
+        left = cobble.field()
+        right = cobble.field()
+    
+    class Evaluator(cobble.visitor(Expression)):
+        def visit_literal(self, literal):
+            return literal.value
+        
+        def visit_add(self, add):
+            return self.visit(add.left) + self.visit(add.right)
+    
+    assert_equal(6, Evaluator().visit(Add(Literal(2), Literal(4))))
+
+
 def _assert_raises(exception_type, func):
     try:
         func()
