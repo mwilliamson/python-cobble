@@ -21,3 +21,9 @@ def can_instantiate_data_class_with_keyword_arguments():
     album = Album(name="Everything in Transit", year=2005)
     assert_equal("Everything in Transit", album.name)
     assert_equal(2005, album.year)
+
+
+@istest
+def repr_includes_class_name_and_field_values():
+    album = Album(name="Everything in Transit", year=2005)
+    assert_equal("Album(name='Everything in Transit', year=2005)", repr(album))
