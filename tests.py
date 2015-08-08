@@ -38,6 +38,21 @@ def can_instantiate_data_class_with_keyword_arguments():
 
 
 @istest
+def init_calls_super_init():
+    class Node(object):
+        def __init__(self):
+            self.is_node = True
+
+    @cobble.data
+    class Literal(Node):
+        value = cobble.field()
+        
+    literal = Literal(42)
+    assert_equal(True, literal.is_node)
+    assert_equal(42, literal.value)
+
+
+@istest
 def repr_includes_class_name_and_field_values():
     album = Album(name="Everything in Transit", year=2005)
     assert_equal("Album(name='Everything in Transit', year=2005)", repr(album))

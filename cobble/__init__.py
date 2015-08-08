@@ -29,7 +29,7 @@ def data(cls):
 def _methods(cls, fields):
     names = [name for name, field in fields]
     return [
-        _make_init(fields),
+        _make_init(cls, fields),
         _make_repr(cls, names),
         _make_eq(cls, names),
         _make_neq(),
@@ -37,7 +37,7 @@ def _methods(cls, fields):
     ]
 
 
-def _make_init(fields):
+def _make_init(cls, fields):
     def make_arg(name, field):
         if field.default == _undefined:
             return name
@@ -49,7 +49,7 @@ def _make_init(fields):
         "\n    self.{0} = {0}".format(name)
         for name, field in fields
     )
-    return "def __init__(self, {0}):{1}\n    pass\n".format(args_source, assignments_source)
+    return "def __init__(self, {0}):{1}\n    super({2}, self).__init__()\n".format(args_source, assignments_source, cls.__name__)
 
 
 def _make_repr(cls, names):
