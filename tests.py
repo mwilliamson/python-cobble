@@ -15,6 +15,15 @@ def module_of_class_is_module_of_caller():
 
 
 @istest
+def can_instantiate_empty_data_class():
+    @cobble.data
+    class Empty(object):
+        pass
+    
+    Empty()
+
+
+@istest
 def can_instantiate_data_class_with_positional_arguments():
     album = Album("Everything in Transit", 2005)
     assert_equal("Everything in Transit", album.name)

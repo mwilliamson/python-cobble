@@ -49,7 +49,7 @@ def _make_init(fields):
         "\n    self.{0} = {0}".format(name)
         for name, field in fields
     )
-    return "def __init__(self, {0}):{1}\n".format(args_source, assignments_source)
+    return "def __init__(self, {0}):{1}\n    pass\n".format(args_source, assignments_source)
 
 
 def _make_repr(cls, names):
@@ -61,10 +61,9 @@ def _make_repr(cls, names):
 
 
 def _make_eq(cls, names):
-    return "def __eq__(self, other):\n    return isinstance(other, {0}) and {1}".format(
-        cls.__name__,
-        " and ".join("self.{0} == other.{0}".format(name) for name in names)
-    )
+    conditions = ["isinstance(other, {0})".format(cls.__name__)] + \
+        ["self.{0} == other.{0}".format(name) for name in names]
+    return "def __eq__(self, other):\n    return {0}".format(" and ".join(conditions))
 
 
 def _make_neq():
