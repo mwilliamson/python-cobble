@@ -136,7 +136,7 @@ class {0}Visitor(object{1}):
 
 
 def _compile_definitions(definitions, bindings):
-    definition_globals = globals()
+    definition_globals = {"abc": abc}
     definition_globals.update(bindings)
     stash = {}
     exec_("\n".join(definitions), definition_globals, stash)
