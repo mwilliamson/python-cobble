@@ -2,7 +2,7 @@ Cobble
 ======
 
 Cobble is a Python library that allows easy creation of data objects,
-including implementations of common methods such as `__eq__` and `__repr__`.
+including implementations of common methods such as ``__eq__`` and ``__repr__``.
 
 Examples
 --------
@@ -22,7 +22,7 @@ Examples
 
     print(song) # Prints "Song(name='MFEO', artist="Jack's Mannequin", album=None)"
 
-..code-block:: python
+.. code-block:: python
 
     @cobble.visitable
     class Expression(object):
