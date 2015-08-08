@@ -125,7 +125,7 @@ class {0}Visitor(object):
 {1}
 """.format(cls.__name__, "\n".join(abstract_methods))
     definition = _compile_definitions([source], {abc: abc})
-    return definition.values()[0]
+    return next(iter(definition.values()))
 
 
 def _compile_definitions(definitions, bindings):
