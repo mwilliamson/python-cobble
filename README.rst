@@ -4,8 +4,8 @@ Cobble
 Cobble is a Python library that allows easy creation of data objects,
 including implementations of common methods such as `__eq__` and `__repr__`.
 
-Example
--------
+Examples
+--------
 
 .. code-block:: python
 
@@ -21,6 +21,30 @@ Example
     song = Song("MFEO", artist="Jack's Mannequin")
 
     print(song) # Prints "Song(name='MFEO', artist="Jack's Mannequin", album=None)"
+
+..code-block:: python
+
+    @cobble.visitable
+    class Expression(object):
+        pass
+
+    @cobble.data
+    class Literal(Expression):
+        value = cobble.field()
+
+    @cobble.data
+    class Add(Expression):
+        left = cobble.field()
+        right = cobble.field()
+
+    class Evaluator(cobble.visitor(Expression)):
+        def visit_literal(self, literal):
+            return literal.value
+        
+        def visit_add(self, add):
+            return self.visit(add.left) + self.visit(add.right)
+
+    Evaluator().visit(Add(Literal(2), Literal(4))) # 6
 
 License
 -------
