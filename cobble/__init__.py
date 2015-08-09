@@ -16,15 +16,15 @@ def data(cls):
         ),
         key=lambda field: field[1].sort_key
     )
-    definitions = _compile_definitions(_methods(cls, fields), {cls.__name__: cls})
+    _add_methods(cls, _methods(cls, fields))
+    register_subclass(cls)
+    return cls
+
+def _add_methods(cls, methods):
+    definitions = _compile_definitions(methods, {cls.__name__: cls})
     for key, value in iteritems(definitions):
         setattr(cls, key, value)
     
-    for superclass in inspect.getmro(cls):
-        if superclass in _visitables:
-            _add_subclass(superclass, cls)
-    
-    return cls
 
 def _methods(cls, fields):
     names = [name for name, field in fields]
@@ -33,7 +33,6 @@ def _methods(cls, fields):
         _make_repr(cls, names),
         _make_eq(cls, names),
         _make_neq(),
-        _make_accept(cls),
     ]
 
 
@@ -102,7 +101,17 @@ _visitables = set()
 def visitable(cls):
     _visitables.add(cls)
     return cls
+
+
+def register_subclass(cls):
+    _add_methods(cls, [_make_accept(cls)])
     
+    for superclass in inspect.getmro(cls):
+        if superclass in _visitables:
+            _add_subclass(superclass, cls)
+    
+    return cls
+
 
 def visitor(cls):
     abstract_method_template = """

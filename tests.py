@@ -136,6 +136,23 @@ def visitor_abc_can_be_generated_from_visitable_subclass():
     assert_equal(6, Evaluator().visit(Add(Literal(2), Literal(4))))
 
 @istest
+def class_can_be_marked_as_subclass_without_data_decorator():
+    @cobble.visitable
+    class Expression(object):
+        pass
+    
+    @cobble.register_subclass
+    class Literal(object):
+        def __init__(self, value):
+            self.value = value
+        
+    class Evaluator(cobble.visitor(Expression)):
+        def visit_literal(self, literal):
+            return literal.value
+
+    assert_equal(2, Evaluator().visit(Literal(2)))
+
+@istest
 def error_if_visitor_is_missing_methods():
     class Evaluator(cobble.visitor(Expression)):
         def visit_literal(self, literal):
