@@ -111,7 +111,6 @@ def default_cannot_be_value_other_than_none():
     assert_equal("default value must be None", str(exception))
 
 
-@cobble.visitable
 class Expression(object):
     pass
 
@@ -136,12 +135,20 @@ def visitor_abc_can_be_generated_from_visitable_subclass():
     assert_equal(6, Evaluator().visit(Add(Literal(2), Literal(4))))
 
 @istest
-def class_can_be_marked_as_subclass_without_data_decorator():
-    @cobble.visitable
+def error_if_visitor_is_missing_methods():
+    class Evaluator(cobble.visitor(Expression)):
+        def visit_literal(self, literal):
+            return literal.value
+
+    error = _assert_raises(TypeError, Evaluator)
+    assert_equal("Can't instantiate abstract class Evaluator with abstract methods visit_add", str(error))
+
+@istest
+def non_data_class_can_be_marked_as_visitable():
     class Expression(object):
         pass
     
-    @cobble.register_subclass
+    @cobble.visitable
     class Literal(object):
         def __init__(self, value):
             self.value = value
@@ -153,13 +160,22 @@ def class_can_be_marked_as_subclass_without_data_decorator():
     assert_equal(2, Evaluator().visit(Literal(2)))
 
 @istest
-def error_if_visitor_is_missing_methods():
-    class Evaluator(cobble.visitor(Expression)):
-        def visit_literal(self, literal):
-            return literal.value
+def sub_sub_classes_are_included_in_abc():
+    class Node(object):
+        pass
+        
+    class Expression(Node):
+        pass
+
+    @cobble.data
+    class Literal(Expression):
+        value = cobble.field()
+    
+    class Evaluator(cobble.visitor(Node)):
+        pass
 
     error = _assert_raises(TypeError, Evaluator)
-    assert_equal("Can't instantiate abstract class Evaluator with abstract methods visit_add", str(error))
+    assert_equal("Can't instantiate abstract class Evaluator with abstract methods visit_literal", str(error))
 
 
 def _assert_raises(exception_type, func):

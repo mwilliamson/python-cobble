@@ -17,7 +17,7 @@ def data(cls):
         key=lambda field: field[1].sort_key
     )
     _add_methods(cls, _methods(cls, fields))
-    register_subclass(cls)
+    visitable(cls)
     return cls
 
 def _add_methods(cls, methods):
@@ -100,16 +100,7 @@ _visitables = set()
 
 def visitable(cls):
     _visitables.add(cls)
-    return cls
-
-
-def register_subclass(cls):
     _add_methods(cls, [_make_accept(cls)])
-    
-    for superclass in inspect.getmro(cls):
-        if superclass in _visitables:
-            _add_subclass(superclass, cls)
-    
     return cls
 
 
@@ -122,6 +113,7 @@ def visitor(cls):
     abstract_methods = (
         abstract_method_template.format(_visit_method_name(subclass))
         for subclass in _subclasses(cls)
+        if subclass in _visitables
     )
     
     if six.PY2:
@@ -155,13 +147,12 @@ def _visit_method_name(cls):
     return "visit_" + underscore(cls.__name__)
 
 
-_subclass_store = {}
-
 def _subclasses(cls):
-    return _subclass_store.get(cls, [])
+    subclasses = cls.__subclasses__()
+    index = 0
+    while index < len(subclasses):
+        subclasses += _subclasses(subclasses[index])
+        index += 1
+    return subclasses
 
-def _add_subclass(cls, subclass):
-    if cls not in _subclass_store:
-        _subclass_store[cls] = []
-    
-    _subclass_store[cls].append(subclass)
+
