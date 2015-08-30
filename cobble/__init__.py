@@ -33,6 +33,7 @@ def _methods(cls, fields):
         _make_repr(cls, names),
         _make_eq(cls, names),
         _make_neq(),
+        _make_hash(cls, names),
     ]
 
 
@@ -67,6 +68,11 @@ def _make_eq(cls, names):
 
 def _make_neq():
     return "def __ne__(self, other): return not (self == other)"
+
+
+def _make_hash(cls, names):
+    elements = [cls.__name__] + ["self.{0}".format(name) for name in names]
+    return "def __hash__(self): return hash(({0}))".format(", ".join(elements))
 
 
 def _make_accept(cls):

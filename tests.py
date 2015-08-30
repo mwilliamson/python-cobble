@@ -95,6 +95,17 @@ def inequality_is_defined():
 
 
 @istest
+def hash_is_defined():
+    def make_album():
+        return Album(name="Everything in Transit", year=2005)
+    # Hold references and assert twice to make sure we don't reuse the same object ID
+    first_album = make_album()
+    second_album = make_album()
+    assert_equal(hash(first_album), hash(second_album))
+    assert_equal(hash(first_album), hash(second_album))
+
+
+@istest
 def field_is_not_required_if_default_is_set_to_none():
     @cobble.data
     class Song(object):
