@@ -18,6 +18,7 @@ def data(cls):
     )
     _add_methods(cls, _methods(cls, fields))
     visitable(cls)
+    cls._cobble_fields = fields
     return cls
 
 def _add_methods(cls, methods):
@@ -162,3 +163,11 @@ def _subclasses(cls):
     return subclasses
 
 
+def copy(obj, **kwargs):
+    obj_type = type(obj)
+    attrs = dict(
+        (name, getattr(obj, name))
+        for name, field in obj_type._cobble_fields
+    )
+    attrs.update(kwargs)
+    return type(obj)(**attrs)

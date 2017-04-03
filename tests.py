@@ -122,6 +122,14 @@ def default_cannot_be_value_other_than_none():
     assert_equal("default value must be None", str(exception))
 
 
+@istest
+def copy_updates_specified_attributes():
+    base = Album(name="Everything in Transit", year=2004)
+    album = cobble.copy(base, year=2005)
+    assert_equal("Everything in Transit", album.name)
+    assert_equal(2005, album.year)
+
+
 class Expression(object):
     pass
 
