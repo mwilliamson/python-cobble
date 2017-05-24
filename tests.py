@@ -154,6 +154,17 @@ def visitor_abc_can_be_generated_from_visitable_subclass():
     assert_equal(6, Evaluator().visit(Add(Literal(2), Literal(4))))
 
 @istest
+def visit_can_take_additional_argument():
+    class Evaluator(cobble.visitor(Expression, args=1)):
+        def visit_literal(self, literal, factor):
+            return factor * literal.value
+        
+        def visit_add(self, add, factor):
+            return self.visit(add.left, factor) + self.visit(add.right, factor)
+
+    assert_equal(12, Evaluator().visit(Add(Literal(2), Literal(4)), 2))
+
+@istest
 def error_if_visitor_is_missing_methods():
     class Evaluator(cobble.visitor(Expression)):
         def visit_literal(self, literal):
@@ -168,7 +179,7 @@ def non_data_class_can_be_marked_as_visitable():
         pass
     
     @cobble.visitable
-    class Literal(object):
+    class Literal(Expression):
         def __init__(self, value):
             self.value = value
         
