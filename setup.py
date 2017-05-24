@@ -9,7 +9,7 @@ def read(fname):
 
 setup(
     name='cobble',
-    version='0.1.2',
+    version='0.1.3',
     description='Create data objects',
     long_description=read("README.rst"),
     author='Michael Williamson',
