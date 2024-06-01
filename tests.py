@@ -1,6 +1,10 @@
+import sys
+
 import cobble
 
-from nose.tools import istest, assert_equal
+
+def assert_equal(left, right):
+    assert left == right
 
 
 @cobble.data
@@ -9,36 +13,31 @@ class Album(object):
     year = cobble.field()
 
 
-@istest
-def module_of_class_is_module_of_caller():
+def test_module_of_class_is_module_of_caller():
     assert_equal("tests", Album.__module__)
 
 
-@istest
-def can_instantiate_empty_data_class():
+def test_can_instantiate_empty_data_class():
     @cobble.data
     class Empty(object):
         pass
-    
+
     Empty()
 
 
-@istest
-def can_instantiate_data_class_with_positional_arguments():
+def test_can_instantiate_data_class_with_positional_arguments():
     album = Album("Everything in Transit", 2005)
     assert_equal("Everything in Transit", album.name)
     assert_equal(2005, album.year)
 
 
-@istest
-def can_instantiate_data_class_with_keyword_arguments():
+def test_can_instantiate_data_class_with_keyword_arguments():
     album = Album(name="Everything in Transit", year=2005)
     assert_equal("Everything in Transit", album.name)
     assert_equal(2005, album.year)
 
 
-@istest
-def init_calls_super_init():
+def test_init_calls_super_init():
     class Node(object):
         def __init__(self):
             self.is_node = True
@@ -46,31 +45,28 @@ def init_calls_super_init():
     @cobble.data
     class Literal(Node):
         value = cobble.field()
-        
+
     literal = Literal(42)
     assert_equal(True, literal.is_node)
     assert_equal(42, literal.value)
 
 
-@istest
-def repr_includes_class_name_and_field_values():
+def test_repr_includes_class_name_and_field_values():
     album = Album(name="Everything in Transit", year=2005)
     assert_equal("Album(name='Everything in Transit', year=2005)", repr(album))
 
 
-@istest
-def str_is_the_same_as_repr():
+def test_str_is_the_same_as_repr():
     album = Album(name="Everything in Transit", year=2005)
     assert_equal(repr(album), str(album))
 
 
-@istest
-def equality_is_defined():
+def test_equality_is_defined():
     @cobble.data
     class NotAnAlbum(object):
         name = cobble.field()
         year = cobble.field()
-    
+
     album = Album(name="Everything in Transit", year=2005)
     assert(album == Album(name="Everything in Transit", year=2005))
     assert not (album == Album(name="Everything in Transit", year=2008))
@@ -79,13 +75,12 @@ def equality_is_defined():
     assert not (album == NotAnAlbum(name="Everything in Transit", year=2005))
 
 
-@istest
-def inequality_is_defined():
+def test_inequality_is_defined():
     @cobble.data
     class NotAnAlbum(object):
         name = cobble.field()
         year = cobble.field()
-    
+
     album = Album(name="Everything in Transit", year=2005)
     assert not (album != Album(name="Everything in Transit", year=2005))
     assert (album != Album(name="Everything in Transit", year=2008))
@@ -94,8 +89,7 @@ def inequality_is_defined():
     assert (album != NotAnAlbum(name="Everything in Transit", year=2005))
 
 
-@istest
-def hash_is_defined():
+def test_hash_is_defined():
     def make_album():
         return Album(name="Everything in Transit", year=2005)
     # Hold references and assert twice to make sure we don't reuse the same object ID
@@ -105,25 +99,22 @@ def hash_is_defined():
     assert_equal(hash(first_album), hash(second_album))
 
 
-@istest
-def field_is_not_required_if_default_is_set_to_none():
+def test_field_is_not_required_if_default_is_set_to_none():
     @cobble.data
     class Song(object):
         name = cobble.field()
         album = cobble.field(default=None)
-    
+
     song = Song("MFEO")
     assert_equal(None, song.album)
 
 
-@istest
-def default_cannot_be_value_other_than_none():
+def test_default_cannot_be_value_other_than_none():
     exception = _assert_raises(TypeError, lambda: cobble.field(default={}))
     assert_equal("default value must be None", str(exception))
 
 
-@istest
-def copy_updates_specified_attributes():
+def test_copy_updates_specified_attributes():
     base = Album(name="Everything in Transit", year=2004)
     album = cobble.copy(base, year=2005)
     assert_equal("Everything in Transit", album.name)
@@ -142,70 +133,75 @@ class Add(Expression):
     left = cobble.field()
     right = cobble.field()
 
-@istest
-def visitor_abc_can_be_generated_from_visitable_subclass():
+def test_visitor_abc_can_be_generated_from_visitable_subclass():
     class Evaluator(cobble.visitor(Expression)):
         def visit_literal(self, literal):
             return literal.value
-        
+
         def visit_add(self, add):
             return self.visit(add.left) + self.visit(add.right)
 
     assert_equal(6, Evaluator().visit(Add(Literal(2), Literal(4))))
 
-@istest
-def visit_can_take_additional_argument():
+def test_visit_can_take_additional_argument():
     class Evaluator(cobble.visitor(Expression, args=1)):
         def visit_literal(self, literal, factor):
             return factor * literal.value
-        
+
         def visit_add(self, add, factor):
             return self.visit(add.left, factor) + self.visit(add.right, factor)
 
     assert_equal(12, Evaluator().visit(Add(Literal(2), Literal(4)), 2))
 
-@istest
-def error_if_visitor_is_missing_methods():
+def test_error_if_visitor_is_missing_methods():
     class Evaluator(cobble.visitor(Expression)):
         def visit_literal(self, literal):
             return literal.value
 
     error = _assert_raises(TypeError, Evaluator)
-    assert_equal("Can't instantiate abstract class Evaluator with abstract methods visit_add", str(error))
 
-@istest
-def non_data_class_can_be_marked_as_visitable():
+    if sys.version_info <= (3, 9):
+        expected = "Can't instantiate abstract class Evaluator with abstract methods visit_add"
+    else:
+        expected = "Can't instantiate abstract class Evaluator with abstract method visit_add"
+    assert_equal(expected, str(error))
+
+def test_non_data_class_can_be_marked_as_visitable():
     class Expression(object):
         pass
-    
+
     @cobble.visitable
     class Literal(Expression):
         def __init__(self, value):
             self.value = value
-        
+
     class Evaluator(cobble.visitor(Expression)):
         def visit_literal(self, literal):
             return literal.value
 
     assert_equal(2, Evaluator().visit(Literal(2)))
 
-@istest
-def sub_sub_classes_are_included_in_abc():
+def test_sub_sub_classes_are_included_in_abc():
     class Node(object):
         pass
-        
+
     class Expression(Node):
         pass
 
     @cobble.data
     class Literal(Expression):
         value = cobble.field()
-    
+
     class Evaluator(cobble.visitor(Node)):
         pass
 
     error = _assert_raises(TypeError, Evaluator)
-    assert_equal("Can't instantiate abstract class Evaluator with abstract methods visit_literal", str(error))
+
+    if sys.version_info <= (3, 9):
+        expected = "Can't instantiate abstract class Evaluator with abstract methods visit_literal"
+    else:
+        expected = "Can't instantiate abstract class Evaluator with abstract method visit_literal"
+    assert_equal(expected, str(error))
 
 
 def _assert_raises(exception_type, func):
@@ -213,5 +209,5 @@ def _assert_raises(exception_type, func):
         func()
     except exception_type as error:
         return error
-        
+
     assert False, "expected {0}".format(exception_type.__name__)
