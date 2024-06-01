@@ -1,10 +1,7 @@
 import itertools
 import functools
 import abc
-import inspect
 
-from .six import exec_, iteritems
-from . import six
 from .inflection import underscore
 
 
@@ -23,9 +20,9 @@ def data(cls):
 
 def _add_methods(cls, methods):
     definitions = _compile_definitions(methods, {cls.__name__: cls})
-    for key, value in iteritems(definitions):
+    for key, value in definitions.items():
         setattr(cls, key, value)
-    
+
 
 def _methods(cls, fields):
     names = [name for name, field in fields]
@@ -44,7 +41,7 @@ def _make_init(cls, fields):
             return name
         else:
             return "{0}={1}".format(name, field.default)
-    
+
     args_source = ", ".join(make_arg(name, field) for name, field in fields)
     assignments_source = "".join(
         "\n    self.{0} = {0}".format(name)
@@ -117,14 +114,14 @@ def visitable(cls):
 def visitor(cls, args=None):
     if args is None:
         args = 0
-    
+
     subclasses = set(filter(
         lambda subclass: subclass in _visitables,
         _subclasses(cls)
     ))
     for subclass in subclasses:
         _add_methods(subclass, [_make_accept(subclass, args=args)])
-    
+
     abstract_method_template = """
     @abc.abstractmethod
     def {0}(self, value):
@@ -134,26 +131,16 @@ def visitor(cls, args=None):
         abstract_method_template.format(_visit_method_name(subclass))
         for subclass in subclasses
     )
-    
-    if six.PY2:
-        py2_metaclass = "__metaclass__ = abc.ABCMeta"
-        py3_metaclass = ""
-    else:
-        py2_metaclass = ""
-        py3_metaclass = ", metaclass=abc.ABCMeta"
-    
+
     source = """
-class {name}Visitor(object{py3_metaclass}):
-    {py2_metaclass}
+class {name}Visitor(metaclass=abc.ABCMeta):
 
     def visit(self, value{args_signature}):
         return value._accept{args}(self{args_signature})
-    
+
 {abstract_methods}
 """.format(
     name=cls.__name__,
-    py3_metaclass=py3_metaclass,
-    py2_metaclass=py2_metaclass,
     args_signature=_args_signature(args),
     args=args,
     abstract_methods="\n".join(abstract_methods),
@@ -169,7 +156,7 @@ def _compile_definitions(definitions, bindings):
     definition_globals = {"abc": abc}
     definition_globals.update(bindings)
     stash = {}
-    exec_("\n".join(definitions), definition_globals, stash)
+    exec("\n".join(definitions), definition_globals, stash)
     return stash
 
 def _visit_method_name(cls):
