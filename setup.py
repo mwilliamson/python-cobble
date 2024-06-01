@@ -17,6 +17,7 @@ setup(
     url='http://github.com/mwilliamson/python-cobble',
     keywords="data object case class",
     packages=['cobble'],
+    python_requires='>=3.2',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
